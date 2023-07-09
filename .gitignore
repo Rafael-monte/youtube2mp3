@@ -1,0 +1,4 @@
+*.txt
+test/*
+output
+output/*
