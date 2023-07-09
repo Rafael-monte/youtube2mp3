@@ -2,7 +2,7 @@ from re import match
 import os
 import youtube_dl
 import pathlib
-
+import threading
 
 
 class Conversor:
@@ -25,19 +25,23 @@ class Conversor:
 
     def install_links(self, links: list[str], output_directory: str = "output/") -> None:
         for link in links:
-            if not self.__is_youtube_url_valid(link):
-                print(f'The following youtube link is invalid: {link}')
-                continue
-            video_id = self.__extract_id_from_link(link)
-            if not video_id:
-                print(f'Couldn\'t extract video ID from link {link}')
-                continue
-            try:
-                print(f'Installing {link}...')
-                music_name=self.__download_file_from_youtube(video_id, output_directory)
-                print(f'Installed "{music_name}" successfully.')
-            except Exception as exception:
-                print(f'An error occoured while converting the following link: {link}\nError:{exception}')
+            threading.Thread(target=self.__download, args=(link, output_directory)).start()
+
+
+    def __download(self, link: str, output_directory: str="output/") -> None:
+        if not self.__is_youtube_url_valid(link):
+            print(f'The following youtube link is invalid: {link}')
+            return
+        video_id = self.__extract_id_from_link(link)
+        if not video_id:
+            print(f'Couldn\'t extract video ID from link {link}')
+            return
+        try:
+            print(f'Installing {link}...')
+            music_name=self.__download_file_from_youtube(video_id, output_directory)
+            print(f'Installed "{music_name}" successfully.')
+        except Exception as exception:
+            print(f'An error occoured while converting the following link: {link}\nError:{exception}')
 
     def __is_youtube_url_valid(self, youtube_url: str) -> bool:
         return match(self.__YOUTUBE_URL_REGEX, youtube_url)
